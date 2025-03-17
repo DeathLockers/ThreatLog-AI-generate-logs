@@ -1,2 +1,4 @@
 # ThreatLog-AI-generate-logs
-Small application to generate logs from a fictitious server and send it to AWS
+Pequeña aplicacion para generar logs de un servidor ficticio y enviarlo al AWS.
+
+Consiste en una pequeña aplicación utilizando Python que sea capaz de generar logs ficticios de Outlook cada cierto tiempo y que los envíe directamente y de forma automatizada por AWS S3 para tenerlo almacenado.
