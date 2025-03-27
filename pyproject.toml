@@ -58,7 +58,6 @@ dev = [
 #
 
 [tool.ruff]
-# Pinned to delay pyupgrade changes (https://github.com/pypa/pip/issues/13236)
 target-version = "py39"
 src = ["src"]
 line-length = 130
