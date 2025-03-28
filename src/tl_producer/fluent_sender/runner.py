@@ -1,11 +1,11 @@
 import asyncio
 import logging
-from tl_producer.fluent_sender.sender import FluentSender
+from tl_producer.fluent_sender.sender import KafkaSender
 
 class SenderRunner():
     def __init__(self, config):
         self.config = config['runner']
-        self.sender = FluentSender(config['fluent'])
+        self.sender = KafkaSender(config['client_id'])
 
     async def run(self):
         try:
