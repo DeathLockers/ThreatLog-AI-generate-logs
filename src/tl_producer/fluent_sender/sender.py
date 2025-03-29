@@ -1,7 +1,9 @@
 import json
 import logging
 import os
+
 from kafka import KafkaProducer
+
 
 class KafkaSender:
     """KafkaSender is a class that sends messages to a Kafka topic.
@@ -27,7 +29,7 @@ class KafkaSender:
             trace (str): The trace to send.
         """
         logging.info(f"Sending trace to Kafka topic {self.topic}: {trace}")
-        
+
         if not self.initialized:
             raise ValueError("Kafka producer is not initialized. Call setup() before sending messages.")
         self.producer.send(self.topic, trace)
@@ -51,7 +53,7 @@ class KafkaSender:
         self.producer.close()
         self.producer = None
 
- 
+
 class KafkaConfig:
     """KafkaConfig is a class that holds the configuration parameters for the Kafka producer.
     It reads the parameters from environment variables.
@@ -79,19 +81,19 @@ class KafkaConfig:
             security_protocol = security_protocol.upper()
             if security_protocol not in self.KOWN_SECURITY_PROTOCOLS:
                 raise ValueError(f"Invalid security protocol: {security_protocol}. Must be one of {self.KOWN_SECURITY_PROTOCOLS}")
-            
+
             self.set_key('security_protocol', security_protocol)
             if security_protocol == 'SASL_SSL':
                 self.set_key('sasl_plain_username', self._get('KAFFKA_USER'))
                 self.set_key('sasl_plain_password', self._get('KAFFKA_PASSWORD'))
                 self.user = self._get('KAFFKA_PASSWORD')
-    
+
     def set_key(self, key, value):
         """Set a key-value pair in the configuration dictionary.
         If the value is None, raise a ValueError."""
         if value:
             self.args[key] = value
-        
+
     def _get(self, key, default = None, raise_if_missing=False):
         """Get the value of a key from the environment variables."""
         value =  os.environ.get(key, default)

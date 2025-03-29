@@ -1,10 +1,8 @@
 import asyncio
-import os
-from importlib import resources
 import logging
-from tl_producer.fluent_sender.runner import SenderRunner, create_runner
+from importlib import resources
 
-
+from tl_producer.fluent_sender.runner import create_runner
 
 # Loads fluentbit
 

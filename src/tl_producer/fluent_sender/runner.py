@@ -1,9 +1,11 @@
 import asyncio
 import logging
 import os
+
 from tl_producer.fluent_sender.sender import KafkaSender
 
-class SenderRunner():
+
+class SenderRunner:
     def __init__(self, config):
         self.file = config['runner']['filePath']
         self.interval = config['runner']['interval']
@@ -17,7 +19,7 @@ class SenderRunner():
             self.sender.setup()
             while True:
                 try:
-                    with open(self.file, 'r') as file:
+                    with open(self.file) as file:
                         while (line:=file.readline()):
                             self.sender.send(line)
                             await asyncio.sleep(self.interval)
@@ -38,7 +40,7 @@ def create_runner(file)->SenderRunner:
     logging.info(f"Creating sender runner for file {file}...")
     if not file:
         raise ValueError("File path is required")
-    
+
     client_id = extract_client(file)
     if not client_id:
         raise ValueError("Client ID is required")
@@ -50,7 +52,7 @@ def extract_client(file) -> str:
     """Extract the client ID from the file name"""
     if not file:
         raise ValueError("File path is required")
-    
+
     # Extract the client ID from the file name
     client_id = os.path.basename(file).split('.')[0].split('_')[-1]
     return client_id if client_id else None
