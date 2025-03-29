@@ -2,7 +2,7 @@ import asyncio
 import os
 from importlib import resources
 import logging
-from tl_producer.fluent_sender.runner import SenderRunner
+from tl_producer.fluent_sender.runner import SenderRunner, create_runner
 
 
 
@@ -13,12 +13,21 @@ from tl_producer.fluent_sender.runner import SenderRunner
 async def run():
     """Run the main function."""
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-    logging.info("Starting fluentbit clients from files...")
-    runners = [asyncio.create_task(SenderRunner(file)) for file in resources.files("tl_producer.data").iterdir()]
+    logging.info("Starting clients runners from files...")
+    runners = [create_runner(file) for file in resources.files("tl_producer.data").iterdir()]
 
     async with asyncio.TaskGroup() as tg:
-        tasks = [tg.start_soon(runner.run()) for runner in runners]
+        try:
+            for runner in runners:
+                logging.info(f"Starting sender runner for file {runner.file}...")
+                tg.create_task(runner.run())
 
+            # tasks = [tg.create_task(runner.run()) for runner in runners]
+            # asyncio.wait(tasks)
+        except Exception as e:
+            logging.error(f"Error in task group: {e}")
+
+    logging.info("All tasks completed.")
 
 # Thrreads send logs through fluentbit to defined endpoint
 asyncio.run(run())

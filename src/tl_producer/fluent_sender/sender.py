@@ -10,6 +10,8 @@ class KafkaSender:
     https://kafka-python.readthedocs.io/en/master/apidoc/KafkaProducer.html
     Kafka parameters are readed from environment variables.
     """
+    initialized = False
+    producer = None
     def __init__(self, client_id, **kwargs):
         self.topic = 'customoer_logs'
         self.kafka_config = KafkaConfig()
@@ -24,8 +26,10 @@ class KafkaSender:
         Args:
             trace (str): The trace to send.
         """
-        self.setup()
         logging.info(f"Sending trace to Kafka topic {self.topic}: {trace}")
+        
+        if not self.initialized:
+            raise ValueError("Kafka producer is not initialized. Call setup() before sending messages.")
         self.producer.send(self.topic, trace)
 
     def setup(self):
@@ -35,6 +39,7 @@ class KafkaSender:
             return
         logging.info("Kafka producer is not initialized. Initializing...")
         self.producer = KafkaProducer(**self.kafka_config.args)
+        self.initialized = True
 
     def stop(self):
         """Stop the Kafka producer.
@@ -50,37 +55,46 @@ class KafkaSender:
 class KafkaConfig:
     """KafkaConfig is a class that holds the configuration parameters for the Kafka producer.
     It reads the parameters from environment variables.
-    The class is initialized with the following parameters:
-    - bootstrap_servers: The Kafka broker address.
-    - acks: The number of acknowledgments the producer requires the leader to have received before considering a request complete.
-    - value_serializer: The serializer for the value of the message.
-    - security_protocol: The protocol used to communicate with the broker.
-    - sasl_plain_username: The username for SASL authentication.
-    - sasl_plain_password: The password for SASL authentication.
+    The class is initialized with the following parameters extracted from os environment variables:
+    - bootstrap_servers: The Kafka broker address. KAFK_HOST
+    - acks: The number of acknowledgments the producer requires the leader to have received before considering a request complete. KAFKA_ACKS
+        - 1 means the leader will write the record to its local log but will respond without awaiting full acknowledgement from all followers.
+        - 0 means the leader will not wait for any acknowledgment from the broker.
+        - -1 means the leader will block until all in-sync replicas have acknowledged the record.
+    - client_id: The ID of the client. extracted from the file name.
+    - value_serializer: The serializer for the value of the message. Default is json.dumps.
+    - security_protocol: The protocol used to communicate with the broker. Default is PLAINTEXT.
+    - sasl_plain_username: The username for SASL authentication. KAFFKA_USER
+    - sasl_plain_password: The password for SASL authentication. KAFFKA_PASSWORD
     """
     args = {}
-    KOWN_SECURITY_PROTOCOLS = ['PLAINTEXT','SASL_SSL']
+    KOWN_SECURITY_PROTOCOLS = ['PLAINTEXT', 'SASL_SSL']
 
     def __init__(self):
-        self.set_key('bootstrap_servers', os.environ.get('KAFKA_HOST'))
-        self.set_key('acks', os.environ.get('KAFKA_ACKS'))
+        self.set_key('bootstrap_servers', self._get('KAFKA_HOST', raise_if_missing=True))
+        self.set_key('acks', self._get('KAFKA_ACKS', 1))
         self.set_key('value_serializer', lambda v: json.dumps(v).encode('utf-8'))
-        security_protocol = os.environ.get('security_protocol', None)
+        security_protocol = self._get('security_protocol', 'PLAINTEXT')
         if security_protocol:
-            security_protocol = self.security_protocol.lower()
+            security_protocol = security_protocol.upper()
             if security_protocol not in self.KOWN_SECURITY_PROTOCOLS:
-                raise ValueError(f"Invalid security protocol: {self.security_protocol}. Must be one of {self.KOWN_SECURITY_PROTOCOLS}")
+                raise ValueError(f"Invalid security protocol: {security_protocol}. Must be one of {self.KOWN_SECURITY_PROTOCOLS}")
             
             self.set_key('security_protocol', security_protocol)
             if security_protocol == 'SASL_SSL':
-                self.set_key('sasl_plain_username',os.environ.get('KAFFKA_USER'))
-                self.set_key('sasl_plain_password',os.environ.get('KAFFKA_PASSWORD'))
-                self.user = os.environ.get('KAFFKA_PASSWORD')
+                self.set_key('sasl_plain_username', self._get('KAFFKA_USER'))
+                self.set_key('sasl_plain_password', self._get('KAFFKA_PASSWORD'))
+                self.user = self._get('KAFFKA_PASSWORD')
     
     def set_key(self, key, value):
         """Set a key-value pair in the configuration dictionary.
         If the value is None, raise a ValueError."""
         if value:
             self.args[key] = value
-        else:
+        
+    def _get(self, key, default = None, raise_if_missing=False):
+        """Get the value of a key from the environment variables."""
+        value =  os.environ.get(key, default)
+        if raise_if_missing and value is None:
             raise ValueError(f"Missing required environment variable: {key}")
+        return value
