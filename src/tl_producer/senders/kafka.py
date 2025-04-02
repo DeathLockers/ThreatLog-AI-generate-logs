@@ -14,10 +14,11 @@ class KafkaSender:
     """
     initialized = False
     producer = None
+    client_id = None
     def __init__(self, client_id, **kwargs):
-        self.topic = 'customoer_logs'
+        self.topic = 'customer_logs'
         self.kafka_config = KafkaConfig()
-        self.kafka_config.set_key('client_id', client_id)
+        self.client_id = client_id
         if isinstance(kwargs, dict) or isinstance(kwargs, set):
             if 'value_serializer' in kwargs:
                 self.kafka_config.set_key('value_serializer', kwargs['value_serializer'])
@@ -32,7 +33,10 @@ class KafkaSender:
 
         if not self.initialized:
             raise ValueError("Kafka producer is not initialized. Call setup() before sending messages.")
-        self.producer.send(self.topic, trace)
+        self.producer.send(self.topic, {
+            'trace': trace,
+            'client_id': self.client_id
+        })
 
     def setup(self):
         """Setup the Kafka producer.
@@ -63,7 +67,6 @@ class KafkaConfig:
         - 1 means the leader will write the record to its local log but will respond without awaiting full acknowledgement from all followers.
         - 0 means the leader will not wait for any acknowledgment from the broker.
         - -1 means the leader will block until all in-sync replicas have acknowledged the record.
-    - client_id: The ID of the client. extracted from the file name.
     - value_serializer: The serializer for the value of the message. Default is json.dumps.
     - security_protocol: The protocol used to communicate with the broker. Default is PLAINTEXT.
     - sasl_plain_username: The username for SASL authentication. KAFFKA_USER

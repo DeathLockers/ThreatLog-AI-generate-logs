@@ -12,3 +12,11 @@ Prepara el entorno virtual local para instalar los paquetes necesarios
 .venv\Scripts\activate
 pip install -e .[dev]
 ```
+
+### Docker compose
+
+Si se quiere ejecutar un entorno en local ya que no se dispone de una conexión con un servidor kafka.
+
+```cd ./.devcontainer
+docker compose up -d
+```
