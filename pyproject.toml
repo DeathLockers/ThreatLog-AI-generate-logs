@@ -2,7 +2,7 @@
 name = "tl_producer"
 dynamic = ["version", "dependencies"]
 classifiers = [
-  "Development Status :: 5 - Production/Stable",
+  "Development Status :: 3 - Alpha",
   "Intended Audience :: Developers",
   "License :: OSI Approved :: MIT License",
   "Topic :: Software Development :: Build Tools",
@@ -58,7 +58,6 @@ dev = [
 #
 
 [tool.ruff]
-# Pinned to delay pyupgrade changes (https://github.com/pypa/pip/issues/13236)
 target-version = "py39"
 src = ["src"]
 line-length = 130
@@ -101,7 +100,6 @@ section-order = [
   "future",
   "standard-library",
   "third-party",
-  "vendored",
   "first-party",
   "tests",
   "local-folder",

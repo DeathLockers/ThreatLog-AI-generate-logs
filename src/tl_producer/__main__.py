@@ -1,24 +1,52 @@
+
 import os
 import sys
 
-# Remove '' and current working directory from the first entry
-# of sys.path, if present to avoid using current directory
-# in pip commands check, freeze, install, list and show,
-# when invoked as python -m pip <command>
-if sys.path[0] in ("", os.getcwd()):
-    sys.path.pop(0)
+if not __package__:
+    """https://packaging.python.org/en/latest/discussions/src-layout-vs-flat-layout/#running-a-command-line-interface-from-source-with-src-layout"""
+    # Make CLI runnable from source tree with
+    #    python src/package
+    package_source_path = os.path.dirname(os.path.dirname(__file__))
+    sys.path.insert(0, package_source_path)
 
-# If we are running from a wheel, add the wheel to sys.path
-# This allows the usage python pip-*.whl/pip install pip-*.whl
-if __package__ == "":
-    # __file__ is pip-*.whl/pip/__main__.py
-    # first dirname call strips of '/__main__.py', second strips off '/pip'
-    # Resulting path is the name of the wheel itself
-    # Add that to sys.path so we can import pip
-    path = os.path.dirname(os.path.dirname(__file__))
-    sys.path.insert(0, path)
+import asyncio
+import logging
+from importlib import resources
+from dotenv import load_dotenv
+load_dotenv()
+
+
+# Setup threads for different 'clients'
+async def run():
+    """
+    Carga los archivos de logs de los distintos clientes y los envía a kafka en paralelo.
+    Crea un hilo por cada cliente.
+    Los archivos de logs se encuentran en la carpeta tl_producer/data.
+    Si se define la variable de entorno RUNNER_FILES, se cargan los archivos de logs de los clientes definidos en la variable.
+        *  La ruta de los archivos debe ser absoluta.
+        *  Separa los archivos por '|'.
+    """
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+    logging.info("Starting clients runners from files...")
+    files = (
+        resources.files("tl_producer.data").iterdir()
+        if os.environ.get("RUNNER_FILES") is None
+        else os.environ.get("RUNNER_FILES").split("|")
+    )
+    runners = [create_runner(file) for file in files]
+
+    async with asyncio.TaskGroup() as tg:
+        try:
+            for runner in runners:
+                logging.info("Starting sender runner for file %s...", runner.file)
+                tg.create_task(runner.run())
+        except Exception as e:
+            logging.error("Error in task group: %s", e)
+
+    logging.info("All tasks completed.")
 
 if __name__ == "__main__":
-    from pip._internal.cli.main import main as _main
+    from tl_producer._services.runner import create_runner
 
-    sys.exit(_main())
+    # Thrreads send logs through fluentbit to defined endpoint
+    asyncio.run(run())

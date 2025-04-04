@@ -8,6 +8,8 @@ src/tl_producer.egg-info/SOURCES.txt
 src/tl_producer.egg-info/dependency_links.txt
 src/tl_producer.egg-info/requires.txt
 src/tl_producer.egg-info/top_level.txt
+src/tl_producer/_services/kafka.py
+src/tl_producer/_services/runner.py
 src/tl_producer/data/CIDDS-001-external-week1.csv
 src/tl_producer/data/logs_client_id_1.csv
 src/tl_producer/data/logs_client_id_2.csv
