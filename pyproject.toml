@@ -42,10 +42,6 @@ dependencies = {file = "requirements.txt"}
 where = ["src"]
 exclude = ["contrib", "docs", "tests*", "tasks"]
 
-[tool.setuptools.package-data]
-tl_producer = ["data/*.csv"]
-
-
 [project.optional-dependencies]
 dev = [
   "pytest",

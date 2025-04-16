@@ -66,22 +66,36 @@ Sigue estos pasos para configurar el entorno virtual:
 
 Si se quiere ejecutar un entorno en local ya que no se dispone de una conexión con un servidor kafka.
 
-```cd ./.devcontainer
+```bash
 docker compose up -d
 ```
-
-The `.devcontainer` directory contains the necessary `docker-compose.yml` file for setting up the local environment.
+`docker-compose.yml` file for setting up the local environment.
 
 ### Variables de entorno
 
-- `KAFKA_HOST`: The address of the Kafka broker (e.g., `broker:9093`).
-- `RUNNER_INTERVAL_SECONDS`: The interval (in seconds) at which the runner sends logs.
+A continuación, se listan todas las variables de entorno utilizadas en el proyecto:
+
+- `KAFKA_HOST`: Dirección del broker de Kafka (por ejemplo, `broker:9093`).
+- `RUNNER_INTERVAL_SECONDS`: Intervalo (en segundos) en el que el runner envía logs.
+- `KAFKA_NODE_ID`: ID del nodo Kafka.
+- `KAFKA_LISTENERS`: Lista de listeners configurados para Kafka.
+- `KAFKA_ADVERTISED_LISTENERS`: Lista de listeners anunciados para Kafka.
+- `KAFKA_LISTENER_SECURITY_PROTOCOL_MAP`: Mapa de protocolos de seguridad para los listeners.
+- `KAFKA_PROCESS_ROLES`: Roles del proceso Kafka (por ejemplo, `broker,controller`).
+- `KAFKA_CONTROLLER_QUORUM_VOTERS`: Configuración de quorum para el controlador.
+- `KAFKA_CONTROLLER_LISTENER_NAMES`: Nombres de los listeners del controlador.
+- `KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR`: Factor de replicación para el topic de offsets.
+- `KAFKA_INTER_BROKER_LISTENER_NAME`: Listener utilizado para la comunicación entre brokers.
+- `DYNAMIC_CONFIG_ENABLED`: Habilita la configuración dinámica en Kafka UI.
+- `KAFKA_CLUSTERS_0_NAME`: Nombre del cluster Kafka en Kafka UI.
+- `KAFKA_CLUSTERS_0_BOOTSTRAP_SERVERS`: Dirección del bootstrap server para Kafka UI.
 
 ## Consumir el servicio en otros proyectos
 
 Para consumir el servicio en otros proyectos, simplemente
 
-``` # Docker compose
+```yaml
+# Docker compose
 services:  
   log-producer:
     image: ghcr.io/deathlockers/tlsender
@@ -90,11 +104,14 @@ services:
     environment:
       - KAFKA_HOST=broker:9093
       - RUNNER_INTERVAL_SECONDS=15
+    volumes:
+    - ./src/data:/data
 ```
 
 The `log-producer` service generates and sends logs to the Kafka broker.
 
-``` # Full sample
+```yaml
+# Full sample
 services:
   # Kafka broker
   broker:
@@ -157,6 +174,8 @@ services:
     environment:
       - KAFKA_HOST=broker:9093
       - RUNNER_INTERVAL_SECONDS=15
+    volumes:
+    - ./src/data:/data
 networks:
   default:
     name: kafka_network

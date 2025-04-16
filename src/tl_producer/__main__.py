@@ -1,6 +1,11 @@
 
+import asyncio
+import logging
 import os
+import pathlib
 import sys
+
+from dotenv import load_dotenv
 
 if not __package__:
     """https://packaging.python.org/en/latest/discussions/src-layout-vs-flat-layout/#running-a-command-line-interface-from-source-with-src-layout"""
@@ -9,10 +14,6 @@ if not __package__:
     package_source_path = os.path.dirname(os.path.dirname(__file__))
     sys.path.insert(0, package_source_path)
 
-import asyncio
-import logging
-from importlib import resources
-from dotenv import load_dotenv
 load_dotenv()
 
 
@@ -28,11 +29,9 @@ async def run():
     """
     logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
     logging.info("Starting clients runners from files...")
-    files = (
-        resources.files("tl_producer.data").iterdir()
-        if os.environ.get("RUNNER_FILES") is None
-        else os.environ.get("RUNNER_FILES").split("|")
-    )
+
+    files_path = pathlib.Path(os.environ.get("RUNNER_FILES_PATH", "/data"))
+    files = [f.name for f in files_path.iterdir() if f.is_file()]
     runners = [create_runner(file) for file in files]
 
     async with asyncio.TaskGroup() as tg:
