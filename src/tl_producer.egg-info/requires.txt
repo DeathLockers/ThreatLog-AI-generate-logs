@@ -1,7 +1,0 @@
-kafka-python
-anyio
-
-[dev]
-pytest
-pylint
-ruff

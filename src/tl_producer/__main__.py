@@ -31,7 +31,7 @@ async def run():
     logging.info("Starting clients runners from files...")
 
     files_path = pathlib.Path(os.environ.get("RUNNER_FILES_PATH", "/data"))
-    files = [f.name for f in files_path.iterdir() if f.is_file()]
+    files = [str(f.resolve()) for f in files_path.iterdir() if f.is_file()]
     runners = [create_runner(file) for file in files]
 
     async with asyncio.TaskGroup() as tg:

@@ -81,7 +81,7 @@ class KafkaConfig:
     KOWN_SECURITY_PROTOCOLS = ["PLAINTEXT", "SASL_SSL"]
 
     def __init__(self):
-        self.set_key("bootstrap_servers", self._get("KAFKA_HOST", raise_if_missing=True))
+        self.set_key("bootstrap_servers", self._get("KAFKA_HOST", "broker:9093"))
         self.set_key("acks", self._get("KAFKA_ACKS", 1))
         self.set_key("value_serializer", lambda v: json.dumps(v).encode("utf-8"))
         security_protocol = self._get("security_protocol", "PLAINTEXT")
